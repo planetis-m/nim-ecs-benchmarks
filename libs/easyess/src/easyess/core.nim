@@ -485,7 +485,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
       result = `itemName`[0].inspect(`itemName`[1])
 
   result.add quote do:
-    func newEntity*(`ecsName`: `ecsType`; label: string = "Entity"): Entity =
+    proc newEntity*(`ecsName`: `ecsType`; label: string = "Entity"): Entity =
       ## Create an empty entity. This function creates an entity with a
       ## unique ID without any components added. Components can be added
       ## either using `addComponent()` (recommmended) or manually using
@@ -524,7 +524,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
         `ecsName`.`inspectLabelName`[newId] = actualName
 
   result.add quote do:
-    func removeEntity*(`ecsName`: `ecsType`; `entityName`: Entity) =
+    proc removeEntity*(`ecsName`: `ecsType`; `entityName`: Entity) =
       if `existsComponentKind` notin `ecsName`.`signaturesName`[`entityName`.idx]:
         {.line: instantiationInfo().}:
           raise newException(AssertionDefect, "Tried to remove Entity with ID '" & $`entityName`.idx & "' that doesn't exist.")
@@ -549,7 +549,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
       removeEntity(`itemName`[0], `itemName`[1])
 
   result.add quote do:
-    func setSignature*(`ecsName`: `ecsType`;
+    proc setSignature*(`ecsName`: `ecsType`;
                        `entityName`: Entity;
                        signature: Signature = {}) =
       ## Set the signature of an entity to the specified set of `ComponentKind`.
@@ -560,7 +560,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
       `ecsName`.`signaturesName`[`entityName`.idx] = signature
       `ecsName`.`signaturesName`[`entityName`.idx].incl(`existsComponentKind`)
 
-    func setSignature*(`itemName`: (`ecsType`, Entity);
+    proc setSignature*(`itemName`: (`ecsType`, Entity);
                        signature: Signature): Signature =
       let (ecs, entity) = `itemName`
       ecs.setSignature(entity, signature)
@@ -693,7 +693,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
         `itemName`[0].`componentContainerName`[`itemName`[1].idx]
 
     result.add quote do:
-      func addComponent*(`itemName`: (`ecsType`, Entity);
+      proc addComponent*(`itemName`: (`ecsType`, Entity);
                          `lowerName`: `componentType`) =
         `addComment`
         if `componentKind` in `itemName`.getSignature():
@@ -704,7 +704,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
         `ecsName`.`componentContainerName`[`entityName`.idx] = `lowerName`
         `ecsName`.`signaturesName`[`entityName`.idx].incl(`componentKind`)
 
-      func `addName`*(`itemName`: (`ecsType`, Entity);
+      proc `addName`*(`itemName`: (`ecsType`, Entity);
                       `lowerName`: `componentType`) =
         `addComment`
         if `componentKind` in `itemName`.getSignature():
@@ -716,7 +716,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
         `ecsName`.`signaturesName`[`entityName`.idx].incl(`componentKind`)
 
     result.add quote do:
-      func removeComponent*[T: `componentType`](`itemName`: (`ecsType`, Entity);
+      proc removeComponent*[T: `componentType`](`itemName`: (`ecsType`, Entity);
                                                 t: typedesc[
                                                     T] = `componentType`) =
         `removeComment`
@@ -726,7 +726,7 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
 
         `itemName`[0].`signaturesName`[`itemName`[1].idx].excl(`componentKind`)
 
-      func `removeName`*(`itemName`: (`ecsType`, Entity)) =
+      proc `removeName`*(`itemName`: (`ecsType`, Entity)) =
         `removeComment`
         if `componentKind` notin `itemName`.getSignature():
           {.line: instantiationInfo().}:
@@ -858,4 +858,3 @@ macro createECS*(config: static[ECSConfig] = ECSConfig(maxEntities: 100)) =
           `callings`
 
   when ecsDebugMacros: echo repr(result)
-

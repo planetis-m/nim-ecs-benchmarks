@@ -19,22 +19,23 @@ If you want an ECS that feels direct instead of ceremonial, this is the pitch:
 
 ## Install
 
-`pirata` currently lives inside this repository. Add the source directory to your Nim path:
+Install `pirata` like any other Nim package.
 
-```text
---path:"libs/pirata/src"
+Add it to your `.nimble` file:
+
+```nim
+# your_project.nimble
+requires "https://github.com/planetis-m/pirata"
 ```
 
-Then import it:
+Then resolve dependencies and import it normally:
+
+```bash
+nimble sync
+```
 
 ```nim
 import pirata
-```
-
-You can compile a file directly with:
-
-```bash
-nim c -r --path:libs/pirata/src your_game.nim
 ```
 
 ## Two-Minute Start
@@ -89,7 +90,7 @@ What to notice:
 The full example lives in [`examples/pirates.nim`](./examples/pirates.nim). It builds a tiny fleet, sails only the ships that are still afloat, loots a treasure chest, and updates the winner's crew and rum.
 
 ```nim
-import ../src/pirata
+import pirata
 
 type
   ComponentKind = enum
@@ -113,13 +114,15 @@ type
   Treasure = object
     doubloons: int
 
-proc sail(world: var PirataWorld[ComponentKind]) =
+  World = PirataWorld[ComponentKind]
+
+proc sail(world: var World) =
   for entity in world.query({ckShip, ckPosition, ckVelocity}, {ckSunk}):
     let drift = world.fetch(entity, ckVelocity, Velocity)
     world.fetch(entity, ckPosition, Position).x += drift.x
     world.fetch(entity, ckPosition, Position).y += drift.y
 
-proc fleetReport(world: var PirataWorld[ComponentKind]) =
+proc fleetReport(world: var World) =
   echo "Fleet report:"
   for entity in world.query({ckShip, ckPosition}, {ckSunk}):
     let ship = world.fetch(entity, ckShip, Ship)
@@ -220,9 +223,9 @@ That pattern scales well because it stays obvious:
 
 ## Limits
 
-- `maxEntities` must stay within the current entity-id limit of `8191`.
-- The component enum defines the world layout, so keep it deliberate and compact.
-- `pirata` is built around slot-indexed columns and flat queries.
+- `maxEntities` is a real upfront capacity. Each registered payload component allocates storage for that many entities, so large worlds scale memory use linearly across columns.
+- The component enum defines the world layout up front. Adding a new component kind means changing the enum and registering new storage explicitly.
+- Queries are flat signature scans, not archetype-indexed lookups. That keeps the implementation small and predictable, but broad queries still scale with world size.
 
 ## Runtime Contract
 
@@ -233,8 +236,11 @@ That pattern scales well because it stays obvious:
 Run the pirate example:
 
 ```bash
-nim c -r libs/pirata/examples/pirates.nim
+cd examples
+nim c -r pirates.nim
 ```
+
+`examples/config.nims` is only there so the in-repo example can import the local checkout as `import pirata`.
 
 Run the test modules:
 

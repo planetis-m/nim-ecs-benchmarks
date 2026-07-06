@@ -10,12 +10,10 @@ type
   Column = object
     data: pointer
     destroySlots: proc (data: pointer; capacity: int) {.nimcall, raises: [].}
-    freeData: proc (data: pointer) {.nimcall, raises: [].}
 
   PirataWorld*[K: enum] = object
-    signatures: SlotTable[QueryMask[K]]
+    signatures: SlotTable[K]
     registry: array[K, Column]
-    registered: QueryMask[K]
     capacity: EntityBits
 
 template asArray[T](data: pointer): ptr UncheckedArray[T] =
@@ -34,25 +32,21 @@ proc allocColumn[T](capacity: int): pointer =
   else:
     result = allocShared0(bytes)
 
-proc destroyColumnSlots[T](data: pointer; capacity: int) {.raises: [].} =
+proc destroyColumnSlots[T](data: pointer; capacity: int) =
   when not supportsCopyMem(T):
     for slot in 0..<capacity:
       `=destroy`(asArray[T](data)[slot])
 
-proc freeColumnData(data: pointer) {.raises: [].} =
-  deallocShared(data)
-
-proc `=destroy`*[K](world: var PirataWorld[K]) {.raises: [].} =
+proc `=destroy`*[K](world: var PirataWorld[K]) =
   for kind in low(K)..high(K):
     let col = world.registry[kind]
     if not col.data.isNil:
       if col.destroySlots != nil:
         col.destroySlots(col.data, int(world.capacity))
-      if col.freeData != nil:
-        col.freeData(col.data)
+      deallocShared(col.data)
   `=destroy`(world.signatures)
 
-proc `=wasMoved`*[K](world: var PirataWorld[K]) {.raises: [].} =
+proc `=wasMoved`*[K](world: var PirataWorld[K]) =
   `=wasMoved`(world.signatures)
   for kind in low(K)..high(K):
     world.registry[kind].data = nil
@@ -61,9 +55,10 @@ proc `=copy`*[K](dest: var PirataWorld[K]; src: PirataWorld[K]) {.error.}
 proc `=dup`*[K](src: PirataWorld[K]): PirataWorld[K] {.error.}
 
 proc newPirata*[K: enum](maxEntities = 1024): PirataWorld[K] =
-  result = default(PirataWorld[K])
-  result.capacity = EntityBits(maxEntities)
-  result.signatures = initSlotTableOfCap[QueryMask[K]](maxEntities)
+  result = PirataWorld[K](
+    capacity: EntityBits(maxEntities),
+    signatures: initSlotTableOfCap[K](maxEntities)
+  )
 
 proc contains*[K: enum](world: PirataWorld[K]; entity: Entity): bool {.inline.} =
   world.signatures.contains(entity)
@@ -74,18 +69,14 @@ template signature[K: enum](world: PirataWorld[K]; entity: Entity): untyped =
 proc registerComponent[T; K: enum](world: var PirataWorld[K]; kind: K) =
   world.registry[kind] = Column(
     data: allocColumn[T](int(world.capacity)),
-    destroySlots: when supportsCopyMem(T): nil else: destroyColumnSlots[T],
-    freeData: freeColumnData
+    destroySlots: when supportsCopyMem(T): nil else: destroyColumnSlots[T]
   )
-  world.registered.incl(kind)
 
 proc registerTag*[K: enum](world: var PirataWorld[K]; kind: K) =
   world.registry[kind] = Column(
     data: nil,
-    destroySlots: nil,
-    freeData: nil
+    destroySlots: nil
   )
-  world.registered.incl(kind)
 
 proc spawn*[K: enum](world: var PirataWorld[K]): Entity {.inline.} =
   world.signatures.incl({})

@@ -16,28 +16,28 @@ type
     rawPointer: pointer
 
     ## Resize the number of dense blocks.
-    resizeOp: proc (p:pointer, n:int) {.noSideEffect, nimcall, inline.}
+    resizeOp: proc (p:pointer, n:int) {.nimcall, inline.}
 
     ## Allocate a dense block at a specific index.
-    newBlockAtOp: proc (p:pointer, i:int) {.noSideEffect, nimcall, inline.}
+    newBlockAtOp: proc (p:pointer, i:int) {.nimcall, inline.}
 
     ## Allocate a dense block at a given offset.
-    newBlockOp: proc (p:pointer, offset:int) {.noSideEffect, nimcall, inline.}
+    newBlockOp: proc (p:pointer, offset:int) {.nimcall, inline.}
 
     ## Allocate or update a sparse block.
-    newSparseBlockOp: proc (p:pointer, offset:int, m:uint) {.noSideEffect, nimcall, inline.}
+    newSparseBlockOp: proc (p:pointer, offset:int, m:uint) {.nimcall, inline.}
 
     ## Allocate multiple sparse blocks at once.
-    newSparseBlocksOp: proc (p:pointer, offset:int, m:seq[uint]) {.noSideEffect, nimcall, inline.}
+    newSparseBlocksOp: proc (p:pointer, offset:int, m:seq[uint]) {.nimcall, inline.}
 
     ## Override one value with another (dense/dense or sparse/sparse via packed IDs).
-    overrideValsOp: proc (p:pointer, i:uint, j:uint)  {.noSideEffect, nimcall, inline.}
+    overrideValsOp: proc (p:pointer, i:uint, j:uint)  {.nimcall, inline.}
 
     ## Override a dense value with a sparse value.
-    overrideDSOp: proc (p:pointer, d:DenseHandle, s:SparseHandle)  {.noSideEffect, nimcall, inline.}
+    overrideDSOp: proc (p:pointer, d:DenseHandle, s:SparseHandle)  {.nimcall, inline.}
 
     ## Override a sparse value with a dense value.
-    overrideSDOp: proc (p:pointer, s:SparseHandle, d:DenseHandle)  {.noSideEffect, nimcall, inline.}
+    overrideSDOp: proc (p:pointer, s:SparseHandle, d:DenseHandle)  {.nimcall, inline.}
 
     ## Batch override used during archetype transitions.
     overrideValsBatchOp: proc (
@@ -62,25 +62,25 @@ type
     getSparseChunkMaskOp: proc(p:pointer, i:int):uint {.noSideEffect, nimcall, inline.}
 
     ## Set the sparse mask (currently unused / placeholder).
-    setSparseMaskOp: proc (p:pointer, m:seq[uint]) {.noSideEffect, nimcall, inline.}
+    setSparseMaskOp: proc (p:pointer, m:seq[uint]) {.nimcall, inline.}
 
     ## Clear all dense change tracking.
-    clearDenseChangeOp: proc(p:pointer) {.noSideEffect, nimcall, inline.}
+    clearDenseChangeOp: proc(p:pointer) {.nimcall, inline.}
 
     ## Clear all sparse change tracking.
-    clearSparseChangeOp: proc(p:pointer) {.noSideEffect, nimcall, inline.}
+    clearSparseChangeOp: proc(p:pointer) {.nimcall, inline.}
 
     ## Activate a single sparse bit.
-    activateSparseBitOp: proc (p:pointer, i:uint) {.noSideEffect, nimcall, inline.}
+    activateSparseBitOp: proc (p:pointer, i:uint) {.nimcall, inline.}
 
     ## Activate multiple sparse bits.
-    activateSparseBitBatchOp: proc (p:pointer, i:seq[uint]) {.noSideEffect, nimcall, inline.}
+    activateSparseBitBatchOp: proc (p:pointer, i:seq[uint]) {.nimcall, inline.}
 
     ## Deactivate a single sparse bit.
-    deactivateSparseBitOp: proc (p:pointer, i:uint) {.noSideEffect, nimcall, inline.}
+    deactivateSparseBitOp: proc (p:pointer, i:uint) {.nimcall, inline.}
 
     ## Deactivate multiple sparse bits.
-    deactivateSparseBitBatchOp: proc (p:pointer, i:seq[uint]) {.noSideEffect, nimcall, inline.}
+    deactivateSparseBitBatchOp: proc (p:pointer, i:seq[uint]) {.nimcall, inline.}
 
     freeEntry: proc (p:pointer) {.raises: [].}
 
@@ -115,39 +115,39 @@ macro registerComponent(registry:untyped, B:typed, P:static bool=false):untyped 
 
     # --- Dense operations ---
 
-    let res = proc (p:pointer, n:int) {.noSideEffect, nimcall, inline.} =
+    let res = proc (p:pointer, n:int) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.resize(n)
 
-    let newBlkAt = proc (p:pointer, i:int) {.noSideEffect, nimcall, inline.} =
+    let newBlkAt = proc (p:pointer, i:int) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.newBlockAt(i)
 
     # --- Sparse operations ---
 
-    let newSparseBlk = proc (p:pointer, offset:int, m:uint) {.noSideEffect, nimcall, inline.} =
+    let newSparseBlk = proc (p:pointer, offset:int, m:uint) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.newSparseBlock(offset, m)
 
-    let newSparseBlks = proc (p:pointer, offset:int, m:seq[uint]) {.noSideEffect, nimcall, inline.} =
+    let newSparseBlks = proc (p:pointer, offset:int, m:seq[uint]) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.newSparseBlocks(offset, m)
 
-    let actBitB = proc (p:pointer, idxs:seq[uint]) {.noSideEffect, nimcall, inline.} =
+    let actBitB = proc (p:pointer, idxs:seq[uint]) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.activateSparseBit(idxs)
 
-    let deactBitB = proc (p:pointer, idxs:seq[uint]) {.noSideEffect, nimcall, inline.} =
+    let deactBitB = proc (p:pointer, idxs:seq[uint]) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.deactivateSparseBit(idxs)
 
     # --- Override operations ---
 
-    let overv = proc (p:pointer, i,j:uint) {.noSideEffect, nimcall, inline.} =
+    let overv = proc (p:pointer, i,j:uint) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,false)
       fr.overrideVals(i, j)
 
-    let overDS = proc (p:pointer, d:DenseHandle,s:SparseHandle) {.noSideEffect, nimcall, inline.} =
+    let overDS = proc (p:pointer, d:DenseHandle,s:SparseHandle) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,false)
       let bidi = (d.obj.id shr BLK_SHIFT) and BLK_MASK
       let idxi = d.obj.id and BLK_MASK
@@ -156,7 +156,7 @@ macro registerComponent(registry:untyped, B:typed, P:static bool=false):untyped 
       let physIdx = fr.toSparse[sbid] - 1
       toObjectCopy(`B`, fr.blocks[bidi].data, idxi, fr.sparse[physIdx].data, si)
 
-    let overSD = proc (p:pointer,s:SparseHandle, d:DenseHandle) {.noSideEffect, nimcall, inline.} =
+    let overSD = proc (p:pointer,s:SparseHandle, d:DenseHandle) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,false)
       let bidi = (d.obj.id shr BLK_SHIFT) and BLK_MASK
       let idxi = d.obj.id and BLK_MASK
@@ -179,19 +179,19 @@ macro registerComponent(registry:untyped, B:typed, P:static bool=false):untyped 
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       return addr fr.sparseMask
 
-    let clearDCh = proc (p:pointer) {.noSideEffect, nimcall, inline.} =
+    let clearDCh = proc (p:pointer) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.clearDenseChanges()
 
-    let clearSCh = proc (p:pointer) {.noSideEffect, nimcall, inline.} =
+    let clearSCh = proc (p:pointer) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.clearSparseChanges()
 
-    let actSparseBit = proc (p:pointer, i:uint) {.noSideEffect, nimcall, inline.} =
+    let actSparseBit = proc (p:pointer, i:uint) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.activateSparseBit(i)
 
-    let deactSparseBit = proc (p:pointer, i:uint) {.noSideEffect, nimcall, inline.} =
+    let deactSparseBit = proc (p:pointer, i:uint) {.nimcall, inline.} =
       var fr = castTo(p, `B`, DEFAULT_BLK_SIZE,`P`)
       fr.deactivateSparseBit(i)
 
